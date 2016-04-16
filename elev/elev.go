@@ -205,7 +205,8 @@ func calculate_cost(current_floor int, target_floor int, dir int) (cost int) {
 	//Might want to fix extra cost based on amount of internal commands.
 }
 
-func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, next_order_ch chan<- int, elev_id string) {
+// func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, next_order_ch chan<- int, elev_id string)
+func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, elev_id string) {
 
 	var lowest_cost_floor int
 	var lowest_cost int
@@ -267,7 +268,7 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, next_o
 			}
 			Println(lowest_cost_floor)
 
-		case next_order_ch <- lowest_cost_floor:
+			//case next_order_ch <- lowest_cost_floor:
 
 		}
 
