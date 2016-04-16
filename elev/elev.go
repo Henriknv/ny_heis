@@ -82,7 +82,7 @@ func Get_local_orders(local_order_ch chan<- [N_FLOORS][N_BUTTONS]int, rem_local_
 
 		}
 
-		Sleep(1 * Millisecond)
+		Sleep(50 * Millisecond)
 
 	}
 }
@@ -108,7 +108,7 @@ func Broadcast_orders(local_order_ch <-chan [N_FLOORS][N_BUTTONS]int, send_ch ch
 
 		}
 
-		Sleep(10 * Millisecond)
+		Sleep(50 * Millisecond)
 
 	}
 }
@@ -153,7 +153,7 @@ func Get_network_orders(receive_ch <-chan Elev_info, calculate_order_ch chan<- m
 
 		//Println(online_elevators)
 
-		Sleep(1 * Millisecond)
+		Sleep(50 * Millisecond)
 
 	}
 }
@@ -272,7 +272,7 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, elev_i
 
 		}
 
-		Sleep(10 * Millisecond)
+		Sleep(50 * Millisecond)
 
 	}
 }
