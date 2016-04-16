@@ -276,9 +276,3 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, elev_i
 
 	}
 }
-
-
-
-
-
-asldkjhsaølkjdsaølkdj
