@@ -20,6 +20,7 @@ const local_listen_port = 20020
 //Struct with elevator information:
 
 type Elev_info struct {
+	Elev_id            string
 	Floor              int
 	Dir                int
 	Local_order_matrix [N_FLOORS][N_BUTTONS]int
@@ -97,12 +98,14 @@ func udp_receive(receive_chan chan<- Elev_info) {
 	}
 }
 
-func Udp_init(send_chan chan Elev_info, receive_chan chan Elev_info) {
+func Udp_init(send_chan chan Elev_info, receive_chan chan Elev_info) (local_address string) {
 
 	get_broadcast_addr(broadcast_listen_port)
 	get_local_addr(local_listen_port)
 
 	go udp_send(send_chan)
 	go udp_receive(receive_chan)
+
+	return local_addr.String()
 
 }

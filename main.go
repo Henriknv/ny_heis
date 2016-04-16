@@ -5,7 +5,7 @@ import . "./elev"
 import . "./constants"
 
 import (
-	. "fmt"
+	//. "fmt"
 	. "time"
 )
 
@@ -16,15 +16,14 @@ func main() {
 	local_order_ch := make(chan [N_FLOORS][N_BUTTONS]int, 100)
 	rem_local_order_ch := make(chan [N_FLOORS][N_BUTTONS]int, 100)
 
-	Udp_init(send_chan, receive_chan)
+	local_addr := Udp_init(send_chan, receive_chan)
 	Elevator_init()
 
 	go Get_local_orders(local_order_ch, rem_local_order_ch)
-	go Broadcast_orders(local_order_ch, send_chan)
+	go Broadcast_orders(local_order_ch, send_chan, local_addr)
+	go Get_network_orders(receive_chan)
 
 	for {
-		msg := <-receive_chan
-		Println(msg)
 
 		Sleep(1 * Millisecond)
 
