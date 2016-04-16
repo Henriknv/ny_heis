@@ -151,6 +151,8 @@ func Get_network_orders(receive_ch <-chan Elev_info, calculate_order_ch chan<- m
 
 		}
 
+		Println(online_elevators)
+
 		Sleep(1 * Millisecond)
 
 	}

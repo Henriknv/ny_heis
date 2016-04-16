@@ -5,7 +5,7 @@ import . "./elev"
 import . "./constants"
 
 import (
-	. "fmt"
+	//. "fmt"
 	. "time"
 )
 
@@ -24,10 +24,8 @@ func main() {
 	local_addr, _ := Udp_init(send_ch, receive_ch)
 	Elevator_init()
 
-	Println(local_addr)
-
 	go Get_local_orders(local_order_ch, rem_local_order_ch, lost_order_ch)
-	//go Broadcast_orders(local_order_ch, send_ch, local_addr)
+	go Broadcast_orders(local_order_ch, send_ch, local_addr)
 	go Get_network_orders(receive_ch, calculate_order_ch, lost_order_ch)
 
 	for {
