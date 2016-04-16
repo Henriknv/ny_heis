@@ -108,7 +108,7 @@ func Broadcast_orders(local_order_ch <-chan [N_FLOORS][N_BUTTONS]int, send_ch ch
 
 		}
 
-		Sleep(2 * Millisecond)
+		Sleep(5 * Millisecond)
 
 	}
 }
