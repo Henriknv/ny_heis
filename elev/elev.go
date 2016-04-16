@@ -82,7 +82,7 @@ func Get_local_orders(local_order_ch chan<- [N_FLOORS][N_BUTTONS]int, rem_local_
 
 		}
 
-		Sleep(50 * Millisecond)
+		Sleep(1 * Millisecond)
 
 	}
 }
@@ -108,7 +108,7 @@ func Broadcast_orders(local_order_ch <-chan [N_FLOORS][N_BUTTONS]int, send_ch ch
 
 		}
 
-		Sleep(50 * Millisecond)
+		Sleep(10 * Millisecond)
 
 	}
 }
@@ -153,7 +153,7 @@ func Get_network_orders(receive_ch <-chan Elev_info, calculate_order_ch chan<- m
 
 		//Println(online_elevators)
 
-		Sleep(50 * Millisecond)
+		Sleep(1 * Millisecond)
 
 	}
 }
@@ -218,7 +218,7 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, elev_i
 		select {
 
 		case online_elevators := <-calculate_order_ch:
-
+			Println(online_elevators)
 			lowest_cost_floor = 0
 			lowest_cost = N_FLOORS * N_BUTTONS * len(online_elevators) * 10
 
@@ -266,13 +266,19 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, elev_i
 			if lowest_cost == N_FLOORS*N_BUTTONS*len(online_elevators)*10 {
 				lowest_cost_floor = -1
 			}
-			Println(lowest_cost_floor)
+			//Println(lowest_cost_floor)
 
 			//case next_order_ch <- lowest_cost_floor:
 
 		}
 
-		Sleep(50 * Millisecond)
+		Sleep(10 * Millisecond)
 
 	}
 }
+
+
+
+
+
+asldkjhsaølkjdsaølkdj
