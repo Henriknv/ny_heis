@@ -218,7 +218,7 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, elev_i
 		select {
 
 		case online_elevators := <-calculate_order_ch:
-			Println(online_elevators)
+
 			lowest_cost_floor = 0
 			lowest_cost = N_FLOORS * N_BUTTONS * len(online_elevators) * 10
 
@@ -266,7 +266,7 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, elev_i
 			if lowest_cost == N_FLOORS*N_BUTTONS*len(online_elevators)*10 {
 				lowest_cost_floor = -1
 			}
-
+			Println(lowest_cost_floor)
 			//case next_order_ch <- lowest_cost_floor:
 
 		}
@@ -274,5 +274,5 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, elev_i
 		Sleep(10 * Millisecond)
 
 	}
-	Println(lowest_cost_floor)
+
 }
