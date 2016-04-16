@@ -94,7 +94,7 @@ func Broadcast_orders(local_order_ch <-chan [N_FLOORS][N_BUTTONS]int, send_ch ch
 
 	for {
 
-		if Elev_get_floor_sensor_signal() == -1 {
+		if Elev_get_floor_sensor_signal() != -1 {
 			floor = Elev_get_floor_sensor_signal()
 		}
 
@@ -239,15 +239,15 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, next_o
 
 					for elevator := range online_elevators {
 
-						if online_elevators[elevator].Local_order_matrix[i][j] == 1 && calculate_cost(online_elevators[elevator].Floor, i, online_elevators[elevator].Dir) < lowest_network_cost {
+						if online_elevators[elevator].Local_order_matrix[i][j] == 1 {
 
-							lowest_network_cost = calculate_cost(online_elevators[elevator].Floor, i, online_elevators[elevator].Dir)
-						}
-
-						if elevator == elev_id {
-
-							local_cost_this_order = calculate_cost(online_elevators[elevator].Floor, i, online_elevators[elevator].Dir)
-
+							if calculate_cost(online_elevators[elevator].Floor, i, online_elevators[elevator].Dir) < lowest_network_cost {
+								lowest_network_cost = calculate_cost(online_elevators[elevator].Floor, i, online_elevators[elevator].Dir)
+							}
+							if elevator == elev_id {
+								local_cost_this_order = calculate_cost(online_elevators[elevator].Floor, i, online_elevators[elevator].Dir)
+								//Println(online_elevators[elevator].Floor)
+							}
 						}
 					}
 
@@ -257,10 +257,10 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, next_o
 						lowest_cost_floor = i
 
 					}
+
+					//Println("Lowest cost :   ", lowest_cost, "		i: 	", i, "		j:", j)
 				}
 			}
-
-			Println(lowest_cost)
 
 			if lowest_cost == N_FLOORS*N_BUTTONS*len(online_elevators)*10 {
 				lowest_cost_floor = -1
@@ -271,7 +271,7 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, next_o
 
 		}
 
-		Sleep(1 * Millisecond)
+		Sleep(10 * Millisecond)
 
 	}
 }
