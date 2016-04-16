@@ -27,7 +27,7 @@ func Elevator_init() {
 	}
 }
 
-func Get_local_orders(local_order_ch chan<- [N_FLOORS][N_BUTTONS]int, rem_local_order_ch <-chan [N_FLOORS][N_BUTTONS]int) {
+func Get_local_orders(local_order_ch chan<- [N_FLOORS][N_BUTTONS]int, rem_local_order_ch <-chan [N_FLOORS][N_BUTTONS]int, lost_order_ch <-chan [N_FLOORS][N_BUTTONS]int) {
 
 	var new_local_order_matrix [N_FLOORS][N_BUTTONS]int
 
@@ -46,6 +46,21 @@ func Get_local_orders(local_order_ch chan<- [N_FLOORS][N_BUTTONS]int, rem_local_
 		}
 
 		select {
+
+		case lost_order_matrix := <-lost_order_ch:
+
+			for i := 0; i < N_FLOORS; i++ {
+
+				for j := 0; j < N_BUTTONS-1; j++ {
+
+					if lost_order_matrix[i][j] == 1 {
+
+						new_local_order_matrix[i][j] = 1
+					}
+				}
+			}
+
+			local_order_ch <- new_local_order_matrix
 
 		case rem_local_order_matrix := <-rem_local_order_ch:
 
@@ -72,7 +87,7 @@ func Get_local_orders(local_order_ch chan<- [N_FLOORS][N_BUTTONS]int, rem_local_
 	}
 }
 
-func Broadcast_orders(local_order_ch <-chan [N_FLOORS][N_BUTTONS]int, send_chan chan<- Elev_info, local_addr string) {
+func Broadcast_orders(local_order_ch <-chan [N_FLOORS][N_BUTTONS]int, send_ch chan<- Elev_info, local_addr string) {
 
 	var floor int
 	var dir int
@@ -89,36 +104,54 @@ func Broadcast_orders(local_order_ch <-chan [N_FLOORS][N_BUTTONS]int, send_chan 
 
 		case local_order_matrix := <-local_order_ch:
 
-			send_chan <- Elev_info{Elev_id: local_addr, Floor: floor, Dir: dir, Local_order_matrix: local_order_matrix}
+			send_ch <- Elev_info{Elev_id: local_addr, Alive_counter: ALIVE_COUNTER, Floor: floor, Dir: dir, Local_order_matrix: local_order_matrix}
 
 		}
 
-		Sleep(1 * Millisecond)
+		Sleep(2 * Millisecond)
 
 	}
 }
 
-func Get_network_orders(receive_chan <-chan Elev_info) {
+func Get_network_orders(receive_ch <-chan Elev_info, calculate_order_ch chan<- map[string]Elev_info, lost_order_ch chan<- [N_FLOORS][N_BUTTONS]int) {
 
 	online_elevators := make(map[string]Elev_info)
+
+	var temp_elev Elev_info
 
 	for {
 
 		select {
-		case new_info := <-receive_chan:
+		case new_info := <-receive_ch:
 
 			online_elevators[new_info.Elev_id] = new_info
 
+			//Disconnected elevator handling:
+
+			for elevator := range online_elevators {
+
+				temp_elev = online_elevators[elevator]
+				temp_elev.Alive_counter = temp_elev.Alive_counter - 1
+
+				online_elevators[elevator] = temp_elev
+
+				if online_elevators[elevator].Alive_counter < 0 {
+
+					lost_order_ch <- online_elevators[elevator].Local_order_matrix
+
+					delete(online_elevators, elevator)
+
+				}
+			}
 		}
 
-		for k := range online_elevators {
+		select {
 
-			Println("-----------------------------------------------------------------------------------")
-			Println(online_elevators[k])
+		case calculate_order_ch <- online_elevators:
 
 		}
 
-		Sleep(1 * Millisecond)
+		Println(online_elevators)
 
 	}
 }

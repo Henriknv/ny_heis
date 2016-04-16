@@ -11,17 +11,22 @@ import (
 
 func main() {
 
-	send_chan := make(chan Elev_info, 100)
-	receive_chan := make(chan Elev_info, 100)
+	send_ch := make(chan Elev_info, 100)
+	receive_ch := make(chan Elev_info, 100)
 	local_order_ch := make(chan [N_FLOORS][N_BUTTONS]int, 100)
 	rem_local_order_ch := make(chan [N_FLOORS][N_BUTTONS]int, 100)
+	calculate_order_ch := make(chan map[string]Elev_info, 100)
+	lost_order_ch := make(chan [N_FLOORS][N_BUTTONS]int, 100)
+	//next_order_ch := make(chan int, 100)
 
-	local_addr := Udp_init(send_chan, receive_chan)
+	//Second return type is error handling.
+
+	local_addr, _ := Udp_init(send_ch, receive_ch)
 	Elevator_init()
 
-	go Get_local_orders(local_order_ch, rem_local_order_ch)
-	go Broadcast_orders(local_order_ch, send_chan, local_addr)
-	go Get_network_orders(receive_chan)
+	go Get_local_orders(local_order_ch, rem_local_order_ch, lost_order_ch)
+	go Broadcast_orders(local_order_ch, send_ch, local_addr)
+	go Get_network_orders(receive_ch, calculate_order_ch, lost_order_ch)
 
 	for {
 

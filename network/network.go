@@ -21,6 +21,7 @@ const local_listen_port = 20020
 
 type Elev_info struct {
 	Elev_id            string
+	Alive_counter      int
 	Floor              int
 	Dir                int
 	Local_order_matrix [N_FLOORS][N_BUTTONS]int
@@ -98,14 +99,22 @@ func udp_receive(receive_chan chan<- Elev_info) {
 	}
 }
 
-func Udp_init(send_chan chan Elev_info, receive_chan chan Elev_info) (local_address string) {
+func Udp_init(send_chan chan Elev_info, receive_chan chan Elev_info) (local_address string, err bool) {
 
-	get_broadcast_addr(broadcast_listen_port)
-	get_local_addr(local_listen_port)
+	err = false
+
+	err_broadcast_addr := get_broadcast_addr(broadcast_listen_port)
+	err_local_addr := get_local_addr(local_listen_port)
 
 	go udp_send(send_chan)
 	go udp_receive(receive_chan)
 
-	return local_addr.String()
+	if err_broadcast_addr != nil || err_local_addr != nil {
+
+		err = true
+
+	}
+
+	return local_addr.String(), err
 
 }

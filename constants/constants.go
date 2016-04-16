@@ -6,3 +6,5 @@ const N_BUTTONS = 3
 const DIR_UP = 1
 const DIR_DOWN = -1
 const DIR_IDLE = 0
+
+const ALIVE_COUNTER = 10
