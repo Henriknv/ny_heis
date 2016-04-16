@@ -113,7 +113,9 @@ func Broadcast_orders(local_order_ch <-chan [N_FLOORS][N_BUTTONS]int, send_ch ch
 	}
 }
 
-func Get_network_orders(receive_ch <-chan Elev_info, calculate_order_ch chan<- map[string]Elev_info, lost_order_ch chan<- [N_FLOORS][N_BUTTONS]int) {
+//func Get_network_orders(receive_ch <-chan Elev_info, calculate_order_ch chan<- map[string]Elev_info, lost_order_ch chan<- [N_FLOORS][N_BUTTONS]int)
+
+func Get_network_orders(receive_ch <-chan Elev_info, lost_order_ch chan<- [N_FLOORS][N_BUTTONS]int) {
 
 	online_elevators := make(map[string]Elev_info)
 
@@ -145,11 +147,11 @@ func Get_network_orders(receive_ch <-chan Elev_info, calculate_order_ch chan<- m
 			}
 		}
 
-		select {
+		// select {
 
-		case calculate_order_ch <- online_elevators:
+		// case calculate_order_ch <- online_elevators:
 
-		}
+		// }
 
 		Println(online_elevators)
 

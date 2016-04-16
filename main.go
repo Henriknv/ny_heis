@@ -15,7 +15,7 @@ func main() {
 	receive_ch := make(chan Elev_info, 100)
 	local_order_ch := make(chan [N_FLOORS][N_BUTTONS]int, 100)
 	rem_local_order_ch := make(chan [N_FLOORS][N_BUTTONS]int, 100)
-	calculate_order_ch := make(chan map[string]Elev_info, 100)
+	//calculate_order_ch := make(chan map[string]Elev_info, 100)
 	lost_order_ch := make(chan [N_FLOORS][N_BUTTONS]int, 100)
 	//next_order_ch := make(chan int, 100)
 
@@ -26,7 +26,7 @@ func main() {
 
 	go Get_local_orders(local_order_ch, rem_local_order_ch, lost_order_ch)
 	go Broadcast_orders(local_order_ch, send_ch, local_addr)
-	go Get_network_orders(receive_ch, calculate_order_ch, lost_order_ch)
+	go Get_network_orders(receive_ch, lost_order_ch)
 
 	for {
 
@@ -34,3 +34,5 @@ func main() {
 
 	}
 }
+
+//go Get_network_orders(receive_ch, calculate_order_ch, lost_order_ch)
