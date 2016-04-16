@@ -7,7 +7,7 @@ const DIR_UP = 1
 const DIR_DOWN = -1
 const DIR_IDLE = 0
 
-const ALIVE_COUNTER = 10000
+const ALIVE_COUNTER = 250 * 2
 
 const FLOOR_COST = 10
 const TURN_COST = 35
