@@ -6,7 +6,6 @@ import . ".././network"
 import .".././fileio"
 
 import (
-	. "fmt"
 	. "time"
 )
 
@@ -131,7 +130,7 @@ func Broadcast_orders(local_order_ch <-chan [N_FLOORS][N_BUTTONS]int, send_ch ch
 	}
 }
 
-//Receives information from online elevators. 
+//Receives information from online elevators. Adds new elevators. Deletes disconnected elevators. Sends map of elevators to system update and calculate orders:
 
 func Get_network_orders(receive_ch <-chan Elev_info, calculate_order_ch chan<- map[string]Elev_info, lost_order_ch chan<- [N_FLOORS][N_BUTTONS]int, system_update_ch chan <- map[string]Elev_info) {
 
@@ -175,6 +174,8 @@ func Get_network_orders(receive_ch <-chan Elev_info, calculate_order_ch chan<- m
 	}
 }
 
+//Golang doesnt have an int abs() function...
+
 func abs_val(val int) int {
 
 	if val < 0 {
@@ -183,6 +184,8 @@ func abs_val(val int) int {
 	return val
 
 }
+
+//Function to calculate costs for specific orders based on the elevators position, direction and target floor:
 
 func calculate_cost(current_floor int, prev_floor int, target_floor int, prev_dir int, button_type int) (cost int) {
 
@@ -198,68 +201,67 @@ func calculate_cost(current_floor int, prev_floor int, target_floor int, prev_di
 	}
 
 	
-	// if dir == DIR_DOWN && button_type == EXT_UP_BUTTONS{
-
-	// 	cost = TURN_COST + abs_val(floor_dif)*FLOOR_COST + 1
-
-	// }else if dir == DIR_UP && button_type == EXT_DOWN_BUTTONS{
-
-	// 	cost = TURN_COST + abs_val(floor_dif)*FLOOR_COST + 1
-
-	// } else if prev_dir == DIR_DOWN && button_type == EXT_UP_BUTTONS{
-
-	// 	cost = TURN_COST + abs_val(floor_dif)*FLOOR_COST + 1
-
-	// }else if prev_dir == DIR_UP && button_type == EXT_DOWN_BUTTONS{
-
-	// 	cost = TURN_COST + abs_val(floor_dif)*FLOOR_COST + 1
-
-	// }else{
-
-	// 	cost = abs_val(floor_dif)*FLOOR_COST + 1
-
-	// }
-
-
 	if dir == DIR_DOWN && button_type == EXT_UP_BUTTONS{
 
-		if floor_dif != 0{
-			cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) + FLOOR_COST*(N_FLOORS- abs_val(floor_dif)) + 1
-		}else{
-			cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) + 1
-		}
+		cost = TURN_COST + abs_val(floor_dif)*FLOOR_COST
 
 	}else if dir == DIR_UP && button_type == EXT_DOWN_BUTTONS{
 
-		if floor_dif != 0{
-			cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) +  FLOOR_COST*(N_FLOORS- abs_val(floor_dif)) + 1
-		}else{
-			cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) + 1
-		}
-
-		
+		cost = TURN_COST + abs_val(floor_dif)*FLOOR_COST
 
 	} else if prev_dir == DIR_DOWN && button_type == EXT_UP_BUTTONS{
 
-		if floor_dif != 0{
-			cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) +  FLOOR_COST*(N_FLOORS- abs_val(floor_dif)) + 1
-		}else{
-			cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) + 1
-		}
+		cost = TURN_COST + abs_val(floor_dif)*FLOOR_COST
 
 	}else if prev_dir == DIR_UP && button_type == EXT_DOWN_BUTTONS{
 
-		if floor_dif != 0{
-			cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) +  FLOOR_COST*(N_FLOORS- abs_val(floor_dif)) + 1
-		}else{
-			cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif))
-		}
+		cost = TURN_COST + abs_val(floor_dif)*FLOOR_COST
+
 	}else{
-		cost = abs_val(floor_dif)*FLOOR_COST + 1
+
+		cost = abs_val(floor_dif)*FLOOR_COST
+
 	}
+
+	// if dir == DIR_DOWN && button_type == EXT_UP_BUTTONS{
+
+	// 	if floor_dif != 0{
+	// 		cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) + FLOOR_COST*(N_FLOORS- abs_val(floor_dif))
+	// 	}else{
+	// 		cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif))
+	// 	}
+
+	// }else if dir == DIR_UP && button_type == EXT_DOWN_BUTTONS{
+
+	// 	if floor_dif != 0{
+	// 		cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) +  FLOOR_COST*(N_FLOORS- abs_val(floor_dif))
+	// 	}else{
+	// 		cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif))
+	// 	}
+
+	// } else if prev_dir == DIR_DOWN && button_type == EXT_UP_BUTTONS{
+
+	// 	if floor_dif != 0{
+	// 		cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) +  FLOOR_COST*(N_FLOORS- abs_val(floor_dif))
+	// 	}else{
+	// 		cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif))
+	// 	}
+
+	// }else if prev_dir == DIR_UP && button_type == EXT_DOWN_BUTTONS{
+
+	// 	if floor_dif != 0{
+	// 		cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) +  FLOOR_COST*(N_FLOORS- abs_val(floor_dif))
+	// 	}else{
+	// 		cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif))
+	// 	}
+	// }else{
+	// 	cost = abs_val(floor_dif)*FLOOR_COST
+	// }
 
 	return cost
 }
+
+//Calculates the next order for the specific elevators. Gets the order of lowest cost from calculates cost. Sends the next order on the next order channel:
 
 func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, next_order_ch chan<- int, elev_id string) {
 
@@ -275,7 +277,7 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, next_o
 		case online_elevators := <-calculate_order_ch:
 
 			lowest_cost_floor = NO_ORDER
-			lowest_cost = N_FLOORS * N_BUTTONS * len(online_elevators) * 100
+			lowest_cost = N_FLOORS * N_BUTTONS * len(online_elevators) * 10
 
 			for i := 0; i < N_FLOORS; i++ {
 				if online_elevators[elev_id].Local_order_matrix[i][INTERNAL_BUTTONS] == 1 && calculate_cost(online_elevators[elev_id].Floor,online_elevators[elev_id].Prev_floor, i, online_elevators[elev_id].Prev_dir, INTERNAL_BUTTONS) < lowest_cost {
@@ -291,8 +293,8 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, next_o
 				for j := 0; j < N_BUTTONS-1; j++ {
 
 				
-					local_cost_this_order = N_FLOORS * N_BUTTONS * len(online_elevators) * 100
-					lowest_network_cost = N_FLOORS * N_BUTTONS * len(online_elevators) * 100
+					local_cost_this_order = N_FLOORS * N_BUTTONS * len(online_elevators) * 10
+					lowest_network_cost = N_FLOORS * N_BUTTONS * len(online_elevators) * 10
 
 					for order_elevator := range online_elevators {
 
@@ -327,13 +329,14 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, next_o
 				}
 			}
 			
-			Println("FLOOR:  ", lowest_cost_floor, "  COST: ", lowest_cost)
 			case next_order_ch <- lowest_cost_floor:
 				Sleep(1*Millisecond)
 
 		}
 	}
 }
+
+//Executes the order given to it by the next order channel. Sets elevator direction. 
 
 func Execute_orders(next_order_ch <-chan int, elev_dir_ch chan <-int){
 
@@ -392,6 +395,8 @@ func Execute_orders(next_order_ch <-chan int, elev_dir_ch chan <-int){
 		}
 	}
 }
+
+//Deletes executed orders received on system update channel. Updates internal and external lights.
 
 func Update_orders_and_lights(system_update_ch <- chan map[string]Elev_info, rem_local_order_ch chan <-[N_FLOORS][N_BUTTONS]int, elev_id string){
 

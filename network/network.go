@@ -64,6 +64,8 @@ func get_local_addr(local_listen_port int) (err error) {
 
 }
 
+//Functions to send and receive UDP packages:
+
 func udp_send(send_chan <-chan Elev_info) {
 
 	conn, _ := net.DialUDP("udp", local_addr, broadcast_addr)
@@ -98,6 +100,8 @@ func udp_receive(receive_chan chan<- Elev_info) {
 
 	}
 }
+
+//Function to initialize UDP connections:
 
 func Udp_init(send_chan chan Elev_info, receive_chan chan Elev_info) (local_address string, err bool) {
 

@@ -5,7 +5,6 @@ import . "./elev"
 import . "./constants"
 
 import (
-	//. "fmt"
 	. "time"
 )
 
