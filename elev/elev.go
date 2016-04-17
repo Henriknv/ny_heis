@@ -99,7 +99,6 @@ func Broadcast_orders(local_order_ch <-chan [N_FLOORS][N_BUTTONS]int, send_ch ch
 	prev_dir := DIR_IDLE
 	dir := DIR_IDLE
 
-
 	for {
 
 		if Elev_get_floor_sensor_signal() != LIMBO {
@@ -107,13 +106,10 @@ func Broadcast_orders(local_order_ch <-chan [N_FLOORS][N_BUTTONS]int, send_ch ch
 
 		}
 
-
-
 		prev_floor = floor - dir
 
 		select {
 
-		// case Get direction from Execute_orders:
 		case temp_dir := <-elev_dir_ch:	
 
 			if temp_dir != dir{
@@ -130,10 +126,12 @@ func Broadcast_orders(local_order_ch <-chan [N_FLOORS][N_BUTTONS]int, send_ch ch
 
 		}
 
-		Sleep(3*Millisecond)
+		Sleep(1*Millisecond)
 
 	}
 }
+
+//Receives information from online elevators. 
 
 func Get_network_orders(receive_ch <-chan Elev_info, calculate_order_ch chan<- map[string]Elev_info, lost_order_ch chan<- [N_FLOORS][N_BUTTONS]int, system_update_ch chan <- map[string]Elev_info) {
 
@@ -200,53 +198,69 @@ func calculate_cost(current_floor int, prev_floor int, target_floor int, prev_di
 	}
 
 	
-	if dir == DIR_DOWN && button_type == EXT_UP_BUTTONS{
-
-		cost = TURN_COST + abs_val(floor_dif)*FLOOR_COST + 1
-
-	}else if dir == DIR_UP && button_type == EXT_DOWN_BUTTONS{
-
-		cost = TURN_COST + abs_val(floor_dif)*FLOOR_COST + 1
-
-	} else if prev_dir == DIR_DOWN && button_type == EXT_UP_BUTTONS{
-
-		cost = TURN_COST + abs_val(floor_dif)*FLOOR_COST + 1
-
-	}else if prev_dir == DIR_UP && button_type == EXT_DOWN_BUTTONS{
-
-		cost = TURN_COST + abs_val(floor_dif)*FLOOR_COST + 1
-		
-	}else{
-
-		cost = abs_val(floor_dif)*FLOOR_COST + 1
-
-	}
-
-
 	// if dir == DIR_DOWN && button_type == EXT_UP_BUTTONS{
 
-	// 	cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) + FLOOR_COST*(N_FLOORS- abs_val(floor_dif)) + 1
-
+	// 	cost = TURN_COST + abs_val(floor_dif)*FLOOR_COST + 1
 
 	// }else if dir == DIR_UP && button_type == EXT_DOWN_BUTTONS{
 
-	// 	cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) +  FLOOR_COST*(N_FLOORS- abs_val(floor_dif)) + 1
+	// 	cost = TURN_COST + abs_val(floor_dif)*FLOOR_COST + 1
 
 	// } else if prev_dir == DIR_DOWN && button_type == EXT_UP_BUTTONS{
 
-	// 	cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) +  FLOOR_COST*(N_FLOORS- abs_val(floor_dif)) + 1
+	// 	cost = TURN_COST + abs_val(floor_dif)*FLOOR_COST + 1
 
 	// }else if prev_dir == DIR_UP && button_type == EXT_DOWN_BUTTONS{
 
-	// 	cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) +  FLOOR_COST*(N_FLOORS- abs_val(floor_dif)) + 1
+	// 	cost = TURN_COST + abs_val(floor_dif)*FLOOR_COST + 1
+
 	// }else{
+
 	// 	cost = abs_val(floor_dif)*FLOOR_COST + 1
+
 	// }
+
+
+	if dir == DIR_DOWN && button_type == EXT_UP_BUTTONS{
+
+		if floor_dif != 0{
+			cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) + FLOOR_COST*(N_FLOORS- abs_val(floor_dif)) + 1
+		}else{
+			cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) + 1
+		}
+
+	}else if dir == DIR_UP && button_type == EXT_DOWN_BUTTONS{
+
+		if floor_dif != 0{
+			cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) +  FLOOR_COST*(N_FLOORS- abs_val(floor_dif)) + 1
+		}else{
+			cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) + 1
+		}
+
+		
+
+	} else if prev_dir == DIR_DOWN && button_type == EXT_UP_BUTTONS{
+
+		if floor_dif != 0{
+			cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) +  FLOOR_COST*(N_FLOORS- abs_val(floor_dif)) + 1
+		}else{
+			cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) + 1
+		}
+
+	}else if prev_dir == DIR_UP && button_type == EXT_DOWN_BUTTONS{
+
+		if floor_dif != 0{
+			cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) +  FLOOR_COST*(N_FLOORS- abs_val(floor_dif)) + 1
+		}else{
+			cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif))
+		}
+	}else{
+		cost = abs_val(floor_dif)*FLOOR_COST + 1
+	}
 
 	return cost
 }
 
-// func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, next_order_ch chan<- int, elev_id string)
 func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, next_order_ch chan<- int, elev_id string) {
 
 	lowest_cost_floor := NO_ORDER
@@ -327,7 +341,6 @@ func Execute_orders(next_order_ch <-chan int, elev_dir_ch chan <-int){
 	current_floor := Elev_get_floor_sensor_signal()
 	var dir int
 	
-
 	for{
 
 		select{

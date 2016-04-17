@@ -11,6 +11,8 @@ import (
 
 func main() {
 
+	//Channels used by the elevator system:
+
 	send_ch := make(chan Elev_info, 1)
 	receive_ch := make(chan Elev_info, 1)
 	local_order_ch := make(chan [N_FLOORS][N_BUTTONS]int, 1)

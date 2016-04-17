@@ -13,11 +13,15 @@ const filename = "order_backup.txt"
 
 var read_buf [N_FLOORS][N_BUTTONS]int
 
+//Function to check error on read/write operation:
+
 func check(e error) {
 	if e != nil {
 		panic(e)
 	}
 }
+
+//Function to read from local file. Creates the file if it doesn't exist:
 
 func Read() [N_FLOORS][N_BUTTONS]int{
 
@@ -33,6 +37,8 @@ func Read() [N_FLOORS][N_BUTTONS]int{
 
 	return read_buf
 }
+
+//Function to write to local file. 
 
 func Write(Local_order_matrix [N_FLOORS][N_BUTTONS]int) {
 
