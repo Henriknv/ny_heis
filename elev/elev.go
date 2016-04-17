@@ -212,6 +212,7 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, elev_i
 	var lowest_cost int
 	var local_cost_this_order int
 	var lowest_network_cost int
+	var lowest_network_now int
 
 	for {
 
@@ -237,17 +238,20 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, elev_i
 
 					local_cost_this_order = N_FLOORS * N_BUTTONS * len(online_elevators) * 10
 					lowest_network_cost = N_FLOORS * N_BUTTONS * len(online_elevators) * 10
+					lowest_network_now = N_FLOORS * N_BUTTONS * len(online_elevators) * 10
 
 					for elevator := range online_elevators {
+						
 
 						if online_elevators[elevator].Local_order_matrix[i][j] == 1 {
+							Println("Elevator: ",elevator, " Elev_id: ",elev_id)
 
-							if calculate_cost(online_elevators[elevator].Floor, i, online_elevators[elevator].Dir) < lowest_network_cost {
-								lowest_network_cost = calculate_cost(online_elevators[elevator].Floor, i, online_elevators[elevator].Dir)
-							}
-
-							local_cost_this_order = calculate_cost(online_elevators[elev_id].Floor, i, online_elevators[elev_id].Dir)
-							if elevator == elev_id{
+							if elevator != elev_id{
+								if calculate_cost(online_elevators[elevator].Floor, i, online_elevators[elevator].Dir) < lowest_network_cost {
+									lowest_network_cost = calculate_cost(online_elevators[elevator].Floor, i, online_elevators[elevator].Dir)
+									Println("Dette skjer ikke!!!!!")								}	
+							}else{
+								local_cost_this_order = calculate_cost(online_elevators[elev_id].Floor, i, online_elevators[elev_id].Dir)
 								local_cost_this_order = local_cost_this_order-1
 							}
 
@@ -258,6 +262,7 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, elev_i
 
 						lowest_cost = local_cost_this_order
 						lowest_cost_floor = i
+						lowest_network_now = lowest_network_cost
 
 					}
 
@@ -265,7 +270,7 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, elev_i
 				}
 			}
 
-			Println("Floor:  ", lowest_cost_floor, "  Cost:  ", lowest_cost)
+			Println("Floor:  ", lowest_cost_floor, "  Cost:  ", lowest_cost, "  lowest network cost:  ", lowest_network_now)
 			//case next_order_ch <- lowest_cost_floor:
 
 		}
