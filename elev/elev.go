@@ -243,14 +243,16 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, elev_i
 					for elevator := range online_elevators {
 
 						if online_elevators[elevator].Local_order_matrix[i][j] == 1 {
-							
+
 							if calculate_cost(online_elevators[elevator].Floor, i, online_elevators[elevator].Dir) < lowest_network_cost {
 								lowest_network_cost = calculate_cost(online_elevators[elevator].Floor, i, online_elevators[elevator].Dir)
 							}
 
 							local_cost_this_order = calculate_cost(online_elevators[elev_id].Floor, i, online_elevators[elev_id].Dir)
 							if elevator == elev_id{
+								lowest_network_cost = local_cost_this_order
 								local_cost_this_order = local_cost_this_order-1
+
 							}
 
 						}
