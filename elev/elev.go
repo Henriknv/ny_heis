@@ -241,17 +241,15 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, elev_i
 					lowest_network_now = N_FLOORS * N_BUTTONS * len(online_elevators) * 10
 
 					for elevator := range online_elevators {
-						
 
 						if online_elevators[elevator].Local_order_matrix[i][j] == 1 {
-							Println("Elevator: ",elevator, " Elev_id: ",elev_id)
+							
+							if calculate_cost(online_elevators[elevator].Floor, i, online_elevators[elevator].Dir) < lowest_network_cost {
+								lowest_network_cost = calculate_cost(online_elevators[elevator].Floor, i, online_elevators[elevator].Dir)
+							}
 
-							if elevator != elev_id{
-								if calculate_cost(online_elevators[elevator].Floor, i, online_elevators[elevator].Dir) < lowest_network_cost {
-									lowest_network_cost = calculate_cost(online_elevators[elevator].Floor, i, online_elevators[elevator].Dir)
-									Println("Dette skjer ikke!!!!!")								}	
-							}else{
-								local_cost_this_order = calculate_cost(online_elevators[elev_id].Floor, i, online_elevators[elev_id].Dir)
+							local_cost_this_order = calculate_cost(online_elevators[elev_id].Floor, i, online_elevators[elev_id].Dir)
+							if elevator == elev_id{
 								local_cost_this_order = local_cost_this_order-1
 							}
 
