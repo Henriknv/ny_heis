@@ -187,6 +187,8 @@ func abs_val(val int) int {
 
 //Function to calculate costs for specific orders based on the elevators position, direction and target floor:
 
+//NB TO SVERRE: IS IT POSSIBLE TO CALCULATE THE COST IN SOME WAY SIMILAR TO THIS? MAYBE OUR LOGIC IS WRONG HERE.
+
 func calculate_cost(current_floor int, prev_floor int, target_floor int, prev_dir int, button_type int) (cost int) {
 
 	floor_dif := target_floor - current_floor
