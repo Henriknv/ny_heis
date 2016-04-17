@@ -189,76 +189,40 @@ func abs_val(val int) int {
 
 func calculate_cost(current_floor int, prev_floor int, target_floor int, prev_dir int, button_type int) (cost int) {
 
+	floor_dif := target_floor - current_floor
 	dir := current_floor - prev_floor
-	floor_dif := target_floor - current_floor 
-
-	if dir < 0{
-		dir = DIR_DOWN
-	}else if dir > 0{
-		dir = DIR_UP
-	}else{
-		dir = DIR_IDLE
-	}
-
-	
-	if dir == DIR_DOWN && button_type == EXT_UP_BUTTONS{
-
-		cost = TURN_COST + abs_val(floor_dif)*FLOOR_COST
-
-	}else if dir == DIR_UP && button_type == EXT_DOWN_BUTTONS{
-
-		cost = TURN_COST + abs_val(floor_dif)*FLOOR_COST
-
-	} else if prev_dir == DIR_DOWN && button_type == EXT_UP_BUTTONS{
-
-		cost = TURN_COST + abs_val(floor_dif)*FLOOR_COST
-
-	}else if prev_dir == DIR_UP && button_type == EXT_DOWN_BUTTONS{
-
-		cost = TURN_COST + abs_val(floor_dif)*FLOOR_COST
-
-	}else{
-
-		cost = abs_val(floor_dif)*FLOOR_COST
-
-	}
-
-	// if dir == DIR_DOWN && button_type == EXT_UP_BUTTONS{
-
-	// 	if floor_dif != 0{
-	// 		cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) + FLOOR_COST*(N_FLOORS- abs_val(floor_dif))
-	// 	}else{
-	// 		cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif))
-	// 	}
-
-	// }else if dir == DIR_UP && button_type == EXT_DOWN_BUTTONS{
-
-	// 	if floor_dif != 0{
-	// 		cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) +  FLOOR_COST*(N_FLOORS- abs_val(floor_dif))
-	// 	}else{
-	// 		cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif))
-	// 	}
-
-	// } else if prev_dir == DIR_DOWN && button_type == EXT_UP_BUTTONS{
-
-	// 	if floor_dif != 0{
-	// 		cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) +  FLOOR_COST*(N_FLOORS- abs_val(floor_dif))
-	// 	}else{
-	// 		cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif))
-	// 	}
-
-	// }else if prev_dir == DIR_UP && button_type == EXT_DOWN_BUTTONS{
-
-	// 	if floor_dif != 0{
-	// 		cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) +  FLOOR_COST*(N_FLOORS- abs_val(floor_dif))
-	// 	}else{
-	// 		cost = TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif))
-	// 	}
-	// }else{
-	// 	cost = abs_val(floor_dif)*FLOOR_COST
-	// }
-
-	return cost
+ 
+ 	if dir == DIR_UP {
+ 
+ 		if floor_dif < 0 {
+ 
+ 			cost = abs_val(floor_dif)*FLOOR_COST + TURN_COST + 1
+ 
+ 		} else {
+ 
+ 			cost = abs_val(floor_dif)*FLOOR_COST + 1
+ 
+ 		}
+ 
+ 	} else if dir == DIR_DOWN {
+ 
+ 		if floor_dif > 0 {
+ 
+ 			cost = abs_val(floor_dif)*FLOOR_COST + TURN_COST + 1
+ 
+ 		} else {
+ 
+ 			cost = abs_val(floor_dif)*FLOOR_COST + 1
+ 
+ 		}
+ 
+ 	} else {
+ 
+ 		cost = abs_val(floor_dif)*FLOOR_COST + 1
+ 
+ 	}
+ 
+ 	return cost
 }
 
 //Calculates the next order for the specific elevators. Gets the order of lowest cost from calculates cost. Sends the next order on the next order channel:
@@ -466,7 +430,6 @@ func Update_orders_and_lights(system_update_ch <- chan map[string]Elev_info, rem
 				Elev_set_floor_indicator(Elev_get_floor_sensor_signal())
 			}	
 			rem_local_order_ch <- new_local_order_matrix
-			//Println("new_local_order_matrix:  ", new_local_order_matrix)
 		}
 	}
 }
