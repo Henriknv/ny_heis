@@ -13,3 +13,6 @@ const FLOOR_COST = 10
 const TURN_COST = 35
 
 const INTERNAL_BUTTONS = 2
+
+const LIMBO = -1
+const NO_ORDER = -2
