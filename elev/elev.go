@@ -247,6 +247,7 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, elev_i
 							for elevator := range online_elevators {
 
 								if elevator != elev_id && calculate_cost(online_elevators[elevator].Floor, i, online_elevators[elevator].Dir) < lowest_network_cost {
+									Println("INNNENNENENENENNENENNENENENENEN****************")
 									lowest_network_cost = calculate_cost(online_elevators[elevator].Floor, i, online_elevators[elevator].Dir)
 								}
 
