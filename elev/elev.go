@@ -77,9 +77,10 @@ func Get_local_orders(local_order_ch chan<- [N_FLOORS][N_BUTTONS]int, rem_local_
 					}
 				}
 			}
+			
 
 		case local_order_ch <- new_local_order_matrix:
-
+			Println("MATRIXXX:   ", new_local_order_matrix)
 		}
 
 	}
@@ -140,6 +141,8 @@ func Get_network_orders(receive_ch <-chan Elev_info, calculate_order_ch chan<- m
 					lost_order_ch <- online_elevators[elevator].Local_order_matrix
 
 					delete(online_elevators, elevator)
+
+					
 
 				}
 			}
@@ -206,7 +209,7 @@ func calculate_cost(current_floor int, target_floor int, dir int) (cost int) {
 }
 
 // func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, next_order_ch chan<- int, elev_id string)
-func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, next_order_ch chan<- int, elev_id string) {
+func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, next_order_ch chan<- int, rem_local_order_ch chan<- [N_FLOORS][N_BUTTONS]int , elev_id string) {
 
 	lowest_cost_floor := NO_ORDER
 	var lowest_cost int
@@ -218,7 +221,10 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, next_o
 		select {
 
 		case online_elevators := <-calculate_order_ch:
-			//Println("Lengde online elevators: ", len(online_elevators))
+
+			//Println("MATRIX:_     ", online_elevators[elev_id].Local_order_matrix)
+			
+			
 			lowest_cost_floor = NO_ORDER
 			lowest_cost = N_FLOORS * N_BUTTONS * len(online_elevators) * 10
 
@@ -283,28 +289,38 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, next_o
 					//Println("Lowest cost :   ", lowest_cost, "		i: 	", i, "		j:", j)
 				}
 			}
+			delete_order(online_elevators, rem_local_order_ch, elev_id)
 
-			
 			case next_order_ch <- lowest_cost_floor:
 
 		}
+
+
 
 	}
 
 }
 
 func Execute_orders(next_order_ch <-chan int, elev_dir_ch chan <-int){
-	var dir int
+
+	
 	target_floor := NO_ORDER
-	var current_floor int
+	current_floor := Elev_get_floor_sensor_signal()
+	var dir int
+
 	for{
 
 		select{
+
 		case target_floor = <- next_order_ch:
-			Println("Target:  ", target_floor)
+
+			//Println("Target:  ", target_floor)
+
 			if target_floor != NO_ORDER{
-				//Println("target_floor  ", target_floor)
-				current_floor = Elev_get_floor_sensor_signal()
+				
+				if Elev_get_floor_sensor_signal() != LIMBO{				
+					current_floor = Elev_get_floor_sensor_signal()
+				}
 
 				if target_floor < current_floor{
 					Elev_set_motor_direction(DIR_DOWN)
@@ -327,13 +343,10 @@ func Execute_orders(next_order_ch <-chan int, elev_dir_ch chan <-int){
 						}
 
 					}
-					
-					//Println("Target2: ", target_floor)
+
 					if Elev_get_floor_sensor_signal() != LIMBO{
 						current_floor = Elev_get_floor_sensor_signal()
 					}
-
-
 
 				}
 				target_floor = NO_ORDER
@@ -341,7 +354,7 @@ func Execute_orders(next_order_ch <-chan int, elev_dir_ch chan <-int){
 				Elev_stop_motor()
 				Elev_open_door()
 				dir = DIR_IDLE
-				//Println("EXECUTED!, BOOM")
+				
 
 			}
 		case elev_dir_ch <- dir:
@@ -353,3 +366,23 @@ func Execute_orders(next_order_ch <-chan int, elev_dir_ch chan <-int){
 }
 
 
+func delete_order(online_elevators map[string]Elev_info, rem_local_order_ch chan <-[N_FLOORS][N_BUTTONS]int, elev_id string ){
+
+	new_local_order_matrix := online_elevators[elev_id].Local_order_matrix
+
+	// for i:= 0; i < N_FLOORS; i++{
+	// 	for j:= 0; j < N_BUTTONS-1; j++{
+	// 		for elevator := range online_elevators {
+				
+
+	// 		}
+	// 	}
+	// }
+
+	if online_elevators[elev_id].Local_order_matrix[online_elevators[elev_id].Floor][INTERNAL_BUTTONS] == 1{
+		new_local_order_matrix[online_elevators[elev_id].Floor][INTERNAL_BUTTONS] = 0
+	}
+
+	rem_local_order_ch <- new_local_order_matrix
+	//Println("new_local_order_matrix:  ", new_local_order_matrix)
+}
