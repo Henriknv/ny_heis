@@ -258,7 +258,9 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, elev_i
 										lowest_network_cost = local_cost_this_order
 									}
 
-									local_cost_this_order = local_cost_this_order-1
+									if order_elevator{
+										local_cost_this_order = local_cost_this_order-1
+									}
 
 								}
 							}
