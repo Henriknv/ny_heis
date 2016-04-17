@@ -77,10 +77,10 @@ func Get_local_orders(local_order_ch chan<- [N_FLOORS][N_BUTTONS]int, rem_local_
 					}
 				}
 			}
-			
+			local_order_ch <- new_local_order_matrix
 
 		case local_order_ch <- new_local_order_matrix:
-			Println("MATRIXXX:   ", new_local_order_matrix)
+			
 		}
 
 	}
@@ -109,7 +109,7 @@ func Broadcast_orders(local_order_ch <-chan [N_FLOORS][N_BUTTONS]int, send_ch ch
 
 		}
 
-		Sleep(5 * Millisecond)
+		Sleep(3*Millisecond)
 
 	}
 }
@@ -142,7 +142,7 @@ func Get_network_orders(receive_ch <-chan Elev_info, calculate_order_ch chan<- m
 
 					delete(online_elevators, elevator)
 
-					
+
 
 				}
 			}
@@ -223,6 +223,7 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, next_o
 		case online_elevators := <-calculate_order_ch:
 
 			//Println("MATRIX:_     ", online_elevators[elev_id].Local_order_matrix)
+			delete_order(online_elevators, rem_local_order_ch, elev_id)
 			
 			
 			lowest_cost_floor = NO_ORDER
@@ -289,8 +290,8 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, next_o
 					//Println("Lowest cost :   ", lowest_cost, "		i: 	", i, "		j:", j)
 				}
 			}
-			delete_order(online_elevators, rem_local_order_ch, elev_id)
-
+			
+			Println(lowest_cost_floor)
 			case next_order_ch <- lowest_cost_floor:
 
 		}
@@ -370,14 +371,41 @@ func delete_order(online_elevators map[string]Elev_info, rem_local_order_ch chan
 
 	new_local_order_matrix := online_elevators[elev_id].Local_order_matrix
 
-	// for i:= 0; i < N_FLOORS; i++{
-	// 	for j:= 0; j < N_BUTTONS-1; j++{
-	// 		for elevator := range online_elevators {
-				
+	for i:= 0; i < N_FLOORS; i++{
 
-	// 		}
-	// 	}
-	// }
+		for j:= 0; j < N_BUTTONS-1; j++{
+
+			for order_elevator := range online_elevators {
+
+				if online_elevators[order_elevator].Local_order_matrix[i][j] == 1{
+
+					for elevator := range online_elevators {
+
+						if online_elevators[elevator].Floor == i{
+
+							if online_elevators[elevator].Dir == DIR_UP && j == EXT_UP_BUTTONS {
+
+								new_local_order_matrix[i][j] = 0
+
+							}
+
+							if online_elevators[elevator].Dir == DIR_DOWN && j == EXT_DOWN_BUTTONS{
+
+								new_local_order_matrix[i][j] = 0
+
+							}
+
+							if online_elevators[elevator].Dir == DIR_IDLE && (j == EXT_UP_BUTTONS || j == EXT_DOWN_BUTTONS){
+
+								new_local_order_matrix[i][j] = 0
+
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 
 	if online_elevators[elev_id].Local_order_matrix[online_elevators[elev_id].Floor][INTERNAL_BUTTONS] == 1{
 		new_local_order_matrix[online_elevators[elev_id].Floor][INTERNAL_BUTTONS] = 0

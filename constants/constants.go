@@ -16,3 +16,6 @@ const INTERNAL_BUTTONS = 2
 
 const LIMBO = -1
 const NO_ORDER = -2
+
+const EXT_UP_BUTTONS = 0
+const EXT_DOWN_BUTTONS = 1

@@ -79,4 +79,5 @@ func Elev_open_door() {
 	Elev_set_door_open_lamp(1)
 	Sleep(1000 * Millisecond)
 	Elev_set_door_open_lamp(0)
+	Sleep(200*Millisecond)
 }
