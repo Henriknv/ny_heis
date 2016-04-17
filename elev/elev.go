@@ -100,10 +100,10 @@ func Broadcast_orders(local_order_ch <-chan [N_FLOORS][N_BUTTONS]int, send_ch ch
 
 		// case Get direction from Execute_orders:
 
-		dir = 0
+		
 
 		case local_order_matrix := <-local_order_ch:
-
+			dir = 0
 			send_ch <- Elev_info{Elev_id: local_addr, Alive_counter: ALIVE_COUNTER, Floor: floor, Dir: dir, Local_order_matrix: local_order_matrix}
 
 		}
@@ -218,7 +218,7 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, elev_i
 		select {
 
 		case online_elevators := <-calculate_order_ch:
-			Println("Lengde online elevators: ", len(online_elevators))
+			//Println("Lengde online elevators: ", len(online_elevators))
 			lowest_cost_floor = -2
 			lowest_cost = N_FLOORS * N_BUTTONS * len(online_elevators) * 10
 
