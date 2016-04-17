@@ -268,7 +268,7 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, elev_i
 						}
 					}
 
-					if local_cost_this_order < lowest_cost && local_cost_this_order < lowest_network_cost {
+					if local_cost_this_order < lowest_cost && local_cost_this_order <= lowest_network_cost {
 
 						lowest_cost = local_cost_this_order
 						lowest_cost_floor = i
