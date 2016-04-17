@@ -23,7 +23,9 @@ type Elev_info struct {
 	Elev_id            string
 	Alive_counter      int
 	Floor              int
+	Prev_floor         int
 	Dir                int
+	Prev_dir           int
 	Local_order_matrix [N_FLOORS][N_BUTTONS]int
 }
 
@@ -32,7 +34,6 @@ type Elev_info struct {
 func get_broadcast_addr(broadcast_listen_port int) (err error) {
 
 	broadcast_addr, err = net.ResolveUDPAddr("udp", "129.241.187.255:"+Itoa(broadcast_listen_port))
-
 	if err != nil {
 		return err
 	}
@@ -46,7 +47,6 @@ func get_broadcast_addr(broadcast_listen_port int) (err error) {
 func get_local_addr(local_listen_port int) (err error) {
 
 	temp_conn, err := net.DialUDP("udp", nil, broadcast_addr)
-
 	if err != nil {
 		return err
 	}

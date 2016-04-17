@@ -3,6 +3,7 @@ package elev
 import . ".././driver"
 import . ".././constants"
 import . ".././network"
+import .".././fileio"
 
 import (
 	. "fmt"
@@ -29,7 +30,8 @@ func Elevator_init() {
 
 func Get_local_orders(local_order_ch chan<- [N_FLOORS][N_BUTTONS]int, rem_local_order_ch <-chan [N_FLOORS][N_BUTTONS]int, lost_order_ch <-chan [N_FLOORS][N_BUTTONS]int) {
 
-	var new_local_order_matrix [N_FLOORS][N_BUTTONS]int
+	new_local_order_matrix := Read()
+	
 
 	for {
 
@@ -60,6 +62,8 @@ func Get_local_orders(local_order_ch chan<- [N_FLOORS][N_BUTTONS]int, rem_local_
 				}
 			}
 
+			Write(new_local_order_matrix)
+
 			local_order_ch <- new_local_order_matrix
 
 		case rem_local_order_matrix := <-rem_local_order_ch:
@@ -78,6 +82,8 @@ func Get_local_orders(local_order_ch chan<- [N_FLOORS][N_BUTTONS]int, rem_local_
 				}
 			}
 
+			Write(new_local_order_matrix)
+
 			local_order_ch <- new_local_order_matrix
 
 		case local_order_ch <- new_local_order_matrix:
@@ -89,23 +95,35 @@ func Get_local_orders(local_order_ch chan<- [N_FLOORS][N_BUTTONS]int, rem_local_
 func Broadcast_orders(local_order_ch <-chan [N_FLOORS][N_BUTTONS]int, send_ch chan<- Elev_info, local_addr string, elev_dir_ch <-chan int) {
 
 	var floor int
-	var dir int
+	var prev_floor int
+	prev_dir := DIR_IDLE
+	dir := DIR_IDLE
+
 
 	for {
 
-		if Elev_get_floor_sensor_signal() != -1 {
+		if Elev_get_floor_sensor_signal() != LIMBO {
 			floor = Elev_get_floor_sensor_signal()
 		}
+
+		prev_floor = floor - dir
 
 		select {
 
 		// case Get direction from Execute_orders:
-		case dir = <-elev_dir_ch:	
+		case temp_dir := <-elev_dir_ch:	
+
+			if temp_dir != dir{
+
+				prev_dir = dir
+				dir = temp_dir
+
+			}
 		
 
 		case local_order_matrix := <-local_order_ch:
 			
-			send_ch <- Elev_info{Elev_id: local_addr, Alive_counter: ALIVE_COUNTER, Floor: floor, Dir: dir, Local_order_matrix: local_order_matrix}
+			send_ch <- Elev_info{Elev_id: local_addr, Alive_counter: ALIVE_COUNTER, Floor: floor, Prev_floor: prev_floor, Dir: dir, Prev_dir: prev_dir, Local_order_matrix: local_order_matrix}
 
 		}
 
@@ -124,7 +142,7 @@ func Get_network_orders(receive_ch <-chan Elev_info, calculate_order_ch chan<- m
 
 		select {
 		case new_info := <-receive_ch:
-
+			
 			online_elevators[new_info.Elev_id] = new_info
 
 			//Disconnected elevator handling:
@@ -144,7 +162,6 @@ func Get_network_orders(receive_ch <-chan Elev_info, calculate_order_ch chan<- m
 
 				}
 			}
-
 		}
 
 		select {
@@ -166,42 +183,39 @@ func abs_val(val int) int {
 
 }
 
-func calculate_cost(current_floor int, target_floor int, dir int) (cost int) {
+func calculate_cost(current_floor int, prev_floor int, target_floor int, prev_dir int, button_type int) (cost int) {
 
+	dir := current_floor - prev_floor
 	floor_dif := target_floor - current_floor
 
-	if dir == DIR_UP {
+	if dir < 0{
+		dir = DIR_DOWN
+	}else if dir > 0{
+		dir = DIR_UP
+	}else{
+		dir = DIR_IDLE
+	}
 
-		if floor_dif < 0 {
+	cost = abs_val(floor_dif)*FLOOR_COST + 1
 
-			cost = abs_val(floor_dif)*FLOOR_COST + TURN_COST + 1
+	if dir == DIR_DOWN && button_type == EXT_UP_BUTTONS{
 
-		} else {
+		cost = cost + TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) + FLOOR_COST*(N_FLOORS- abs_val(floor_dif))
 
-			cost = abs_val(floor_dif)*FLOOR_COST + 1
+	}else if dir == DIR_UP && button_type == EXT_DOWN_BUTTONS{
 
-		}
+		cost = cost + TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) +  FLOOR_COST*(N_FLOORS- abs_val(floor_dif))
 
-	} else if dir == DIR_DOWN {
+	} else if prev_dir == DIR_DOWN && button_type == EXT_UP_BUTTONS{
 
-		if floor_dif > 0 {
+		cost = cost + TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) +  FLOOR_COST*(N_FLOORS- abs_val(floor_dif))
 
-			cost = abs_val(floor_dif)*FLOOR_COST + TURN_COST + 1
+	}else if prev_dir == DIR_UP && button_type == EXT_DOWN_BUTTONS{
 
-		} else {
-
-			cost = abs_val(floor_dif)*FLOOR_COST + 1
-
-		}
-
-	} else {
-
-		cost = abs_val(floor_dif)*FLOOR_COST + 1
-
+		cost = cost + TURN_COST + FLOOR_COST*(N_FLOORS-1-abs_val(floor_dif)) +  FLOOR_COST*(N_FLOORS- abs_val(floor_dif))
 	}
 
 	return cost
-	//Might want to fix extra cost based on amount of internal commands.
 }
 
 // func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, next_order_ch chan<- int, elev_id string)
@@ -217,14 +231,14 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, next_o
 		select {
 
 		case online_elevators := <-calculate_order_ch:
-			
+
 			lowest_cost_floor = NO_ORDER
 			lowest_cost = N_FLOORS * N_BUTTONS * len(online_elevators) * 10
 
 			for i := 0; i < N_FLOORS; i++ {
-				if online_elevators[elev_id].Local_order_matrix[i][INTERNAL_BUTTONS] == 1 && calculate_cost(online_elevators[elev_id].Floor, i, online_elevators[elev_id].Dir) < lowest_cost {
+				if online_elevators[elev_id].Local_order_matrix[i][INTERNAL_BUTTONS] == 1 && calculate_cost(online_elevators[elev_id].Floor,online_elevators[elev_id].Prev_floor, i, online_elevators[elev_id].Prev_dir, INTERNAL_BUTTONS) < lowest_cost {
 
-					lowest_cost = calculate_cost(online_elevators[elev_id].Floor, i, online_elevators[elev_id].Dir)
+					lowest_cost = calculate_cost(online_elevators[elev_id].Floor,online_elevators[elev_id].Prev_floor, i,online_elevators[elev_id].Prev_dir, INTERNAL_BUTTONS)
 					lowest_cost_floor = i
 
 				}
@@ -234,10 +248,7 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, next_o
 
 				for j := 0; j < N_BUTTONS-1; j++ {
 
-					//-------------**********************--------------_*******************_------------***************
-					//Laveste nettverkskost blir max uansett hvis det blir fler en en ordre. Floor og kost ellers er ok
-					//-------------**********************---------------**********************-___------------*********
-
+				
 					local_cost_this_order = N_FLOORS * N_BUTTONS * len(online_elevators) * 10
 					lowest_network_cost = N_FLOORS * N_BUTTONS * len(online_elevators) * 10
 
@@ -247,15 +258,15 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, next_o
 
 							for elevator := range online_elevators {
 
-								if elevator != elev_id && calculate_cost(online_elevators[elevator].Floor, i, online_elevators[elevator].Dir) < lowest_network_cost {
+								if elevator != elev_id && calculate_cost(online_elevators[elevator].Floor, online_elevators[elevator].Prev_floor, i,online_elevators[elevator].Prev_dir, j) < lowest_network_cost {
 
-									lowest_network_cost = calculate_cost(online_elevators[elevator].Floor, i, online_elevators[elevator].Dir)
+									lowest_network_cost = calculate_cost(online_elevators[elevator].Floor, online_elevators[elevator].Prev_floor, i,online_elevators[elevator].Prev_dir, j)
 									
 								}
 
 								if elevator == elev_id{
 
-									local_cost_this_order = calculate_cost(online_elevators[elev_id].Floor, i, online_elevators[elev_id].Dir)
+									local_cost_this_order = calculate_cost(online_elevators[elev_id].Floor, online_elevators[elev_id].Prev_floor, i, online_elevators[elevator].Prev_dir, j)
 
 									if order_elevator == elev_id{
 										local_cost_this_order = local_cost_this_order-1
@@ -274,7 +285,7 @@ func Calculate_next_order(calculate_order_ch <-chan map[string]Elev_info, next_o
 				}
 			}
 			
-			Println(lowest_cost_floor)
+			Println("FLOOR:  ", lowest_cost_floor, "  COST: ", lowest_cost)
 			case next_order_ch <- lowest_cost_floor:
 				Sleep(1*Millisecond)
 
@@ -287,6 +298,7 @@ func Execute_orders(next_order_ch <-chan int, elev_dir_ch chan <-int){
 	target_floor := NO_ORDER
 	current_floor := Elev_get_floor_sensor_signal()
 	var dir int
+	
 
 	for{
 
@@ -294,9 +306,8 @@ func Execute_orders(next_order_ch <-chan int, elev_dir_ch chan <-int){
 
 		case target_floor = <- next_order_ch:
 
-			//Println("Target:  ", target_floor)
-
 			if target_floor != NO_ORDER{
+				
 				
 				if Elev_get_floor_sensor_signal() != LIMBO{				
 					current_floor = Elev_get_floor_sensor_signal()
@@ -321,23 +332,22 @@ func Execute_orders(next_order_ch <-chan int, elev_dir_ch chan <-int){
 						if next_target_floor != LIMBO{
 							target_floor = next_target_floor
 						}
-
 					}
 
-					if Elev_get_floor_sensor_signal() != LIMBO{
-						current_floor = Elev_get_floor_sensor_signal()
-					}
-
+					current_floor = Elev_get_floor_sensor_signal()
+					
 				}
-				target_floor = NO_ORDER
 
+				target_floor = NO_ORDER
+				
 				Elev_stop_motor()
 				Elev_open_door()
-				dir = DIR_IDLE
 				
-
+				dir = DIR_IDLE
 			}
+
 		case elev_dir_ch <- dir:
+
 		}
 	}
 }
